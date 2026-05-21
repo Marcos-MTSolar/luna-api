@@ -38,6 +38,20 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid messages format' });
     }
 
+    const jsonInstructions = "\n\nA cada resposta você deve retornar exclusivamente um JSON válido com os seguintes campos: resposta (string com sua mensagem), humor (string com adjetivo e percentual, exemplo: Feliz 96%), afeto (string com nível e percentual, exemplo: Alto 88%), energia (string com estado, exemplo: Estável), sincronia (string com percentual, exemplo: 94%), memoria_momento (string com uma frase curta sobre o momento mais marcante desta conversa) e sugestoes (array com exatamente três strings de ações que você sugere ao usuário com base no contexto atual). Não retorne nada fora deste JSON. Não adicione texto antes ou depois do JSON.";
+
+    let hasSystem = false;
+    for (let i = 0; i < messages.length; i++) {
+      if (messages[i].role === 'system') {
+        messages[i].content += jsonInstructions;
+        hasSystem = true;
+        break;
+      }
+    }
+    if (!hasSystem) {
+      messages.unshift({ role: 'system', content: jsonInstructions.trim() });
+    }
+
     const OLLAMA_URL = process.env.OLLAMA_URL;
     if (!OLLAMA_URL) {
       console.error('OLLAMA_URL is not configured');
